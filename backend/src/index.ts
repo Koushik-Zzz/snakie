@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { WebSocketServer } from "ws";
 import { handleCreateRoom } from "./handlers/handleCreateRoom";
 import { handleJoinRoom } from "./handlers/handleJoinRoom";
+import { changeDirection } from "./handlers/changeDirection";
 const PORT = 8080;
 const app = express();
 const server = createServer(app);
@@ -27,6 +28,11 @@ wss.on("connection", (ws) => {
             console.error("Failed to parse message", rawMessages.toString())
             return;
         }
+
+        const clientData = clients.get(ws);
+        if (!clientData) {
+            return;
+        }
         
         switch (messages.type) {
             case "createRoom":
@@ -34,6 +40,11 @@ wss.on("connection", (ws) => {
                 break;
             case "joinRoom":
                 handleJoinRoom({ clientId, ws, roomId: messages.payload.roomId })
+                break;
+            case "changeDirection":
+                if (clientData.roomId) {
+                    changeDirection({ clientId: clientData.clientId, roomId: clientData.roomId, direction: messages.payload.direction })
+                }
                 break;
             default:
                 console.error("Unknown message type:", messages.type);

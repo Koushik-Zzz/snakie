@@ -3,6 +3,10 @@ import type { PlayerState, RoomState } from "../types";
 import { clients, rooms } from "..";
 import type { WebSocket } from "ws";
 
+/**
+ * @param clientId ID of the player creating the room
+ * @param ws WebSocket connection of the player
+ */
 export const handleCreateRoom = ({ clientId, ws }: { clientId: string, ws: WebSocket }) => {
     try {
         const roomId = nanoid(6);

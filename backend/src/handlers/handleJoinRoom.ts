@@ -2,6 +2,12 @@ import { clients, rooms } from "..";
 import type { PlayerState } from "../types";
 import type { WebSocket } from "ws";
 
+/**
+ * 
+ * @param clientId ID of the player joining the room
+ * @param ws WebSocket connection of the player
+ * @param roomId ID of the room to join
+ */
 export function handleJoinRoom({ clientId, ws, roomId }: { clientId: string, ws: WebSocket, roomId: string }) {
     if (!rooms.has(roomId)) {
         ws.send(JSON.stringify({
