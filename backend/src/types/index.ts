@@ -1,9 +1,5 @@
 import { WebSocket } from 'ws';
 
-export type ClientData = {
-    clientId: string, 
-    ws: WebSocket
-}
 
 export type PlayerState = {
     snake: { x: number, y: number }[],

@@ -1,8 +1,9 @@
 import { nanoid } from "nanoid"
-import { rooms } from "..";
-import type { ClientData, PlayerState, RoomState } from "../types";
+import type { PlayerState, RoomState } from "../types";
+import { clients, rooms } from "..";
+import type { WebSocket } from "ws";
 
-export const handleCreateRoom = ({clientId, ws}: ClientData) => {
+export const handleCreateRoom = ({ clientId, ws }: { clientId: string, ws: WebSocket }) => {
     try {
         const roomId = nanoid(6);
         const playersState: PlayerState = {
@@ -17,7 +18,7 @@ export const handleCreateRoom = ({clientId, ws}: ClientData) => {
             food: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) },
             status: 'waiting'
         }
-    
+        clients.set(ws, { clientId, roomId })
         rooms.set(roomId, roomState);
         ws.send(JSON.stringify({
             type: "roomCreated",

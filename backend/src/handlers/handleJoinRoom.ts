@@ -1,7 +1,8 @@
-import { rooms } from "..";
-import type { ClientData, PlayerState } from "../types";
+import { clients, rooms } from "..";
+import type { PlayerState } from "../types";
+import type { WebSocket } from "ws";
 
-export function handleJoinRoom({clientId, ws, roomId}: ClientData & { roomId: string }) {
+export function handleJoinRoom({ clientId, ws, roomId }: { clientId: string, ws: WebSocket, roomId: string }) {
     if (!rooms.has(roomId)) {
         ws.send(JSON.stringify({
             type: "error",
@@ -23,7 +24,7 @@ export function handleJoinRoom({clientId, ws, roomId}: ClientData & { roomId: st
         score: 0,
         ws: ws
     };
-
+    clients.set(ws, { clientId, roomId });
     room.players.set(clientId, newPlayerState)
 
     const allPlayerIds = Array.from(room.players.keys())
