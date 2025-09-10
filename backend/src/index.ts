@@ -5,6 +5,7 @@ import { WebSocketServer } from "ws";
 import { handleCreateRoom } from "./handlers/handleCreateRoom";
 import { handleJoinRoom } from "./handlers/handleJoinRoom";
 import { changeDirection } from "./handlers/changeDirection";
+import { handleGameLoop } from "./handlers/GameLoop";
 const PORT = 8080;
 const app = express();
 const server = createServer(app);
@@ -45,6 +46,9 @@ wss.on("connection", (ws) => {
                 if (clientData.roomId) {
                     changeDirection({ clientId: clientData.clientId, roomId: clientData.roomId, direction: messages.payload.direction })
                 }
+                break;
+            case "startGame":
+                handleGameLoop()
                 break;
             default:
                 console.error("Unknown message type:", messages.type);
