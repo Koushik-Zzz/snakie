@@ -1,4 +1,4 @@
-import express from "express";
+import express, { raw } from "express";
 import { createServer } from "http"
 import { nanoid } from "nanoid";
 import { WebSocketServer } from "ws";
@@ -6,6 +6,7 @@ import { handleCreateRoom } from "./handlers/handleCreateRoom";
 import { handleJoinRoom } from "./handlers/handleJoinRoom";
 import { changeDirection } from "./handlers/changeDirection";
 import { handleGameLoop } from "./handlers/GameLoop";
+import { changeDirectionSchema, messageSchema } from "./types/validation";
 const PORT = 8080;
 const app = express();
 const server = createServer(app);
@@ -22,13 +23,23 @@ wss.on("connection", (ws) => {
 
     ws.on("message", (rawMessages) => {
         console.log(`Received message: ${rawMessages}`);
-        let messages;
+        let rawData;
         try {
-            messages = JSON.parse(rawMessages.toString())
+            rawData = JSON.parse(rawMessages.toString())
         } catch (error) {
             console.error("Failed to parse message", rawMessages.toString())
             return;
         }
+
+        const validateMsg = messageSchema.safeParse(rawData);
+
+        if (!validateMsg.success) {
+            console.error("Invalid message", validateMsg.error)
+            return;
+        }
+
+        const messages = validateMsg.data;
+
 
         const clientData = clients.get(ws);
         if (!clientData) {
@@ -44,14 +55,16 @@ wss.on("connection", (ws) => {
                 break;
             case "changeDirection":
                 if (clientData.roomId) {
-                    changeDirection({ clientId: clientData.clientId, roomId: clientData.roomId, direction: messages.payload.direction })
+                    changeDirection({ 
+                        clientId: clientData.clientId, 
+                        roomId: clientData.roomId, 
+                        direction: messages.payload.direction 
+                    })
                 }
                 break;
-            case "startGame":
-                handleGameLoop()
-                break;
+
             default:
-                console.error("Unknown message type:", messages.type);
+                console.error("Unknown message type:", (messages as any).type);
                 break;
         }
         
@@ -96,3 +109,4 @@ server.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
 
+handleGameLoop();

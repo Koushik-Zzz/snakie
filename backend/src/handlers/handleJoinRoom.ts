@@ -1,5 +1,6 @@
 import { clients, rooms } from "..";
-import type { PlayerState } from "../types";
+import { BOARD_HEIGHT, BOARD_WIDTH } from "../constants/constants";
+import type { PlayerState, RoomState } from "../types";
 import type { WebSocket } from "ws";
 
 /**
@@ -25,7 +26,7 @@ export function handleJoinRoom({ clientId, ws, roomId }: { clientId: string, ws:
     }
 
     const newPlayerState: PlayerState = {
-        snake: [{ x: 10, y: 10 }],
+        snake: [generateStartPosition(room)],
         direction: 'right',
         score: 0,
         ws: ws
@@ -41,4 +42,28 @@ export function handleJoinRoom({ clientId, ws, roomId }: { clientId: string, ws:
         }))
     }
 
+}
+
+const generateStartPosition = (room: RoomState): { x: number; y: number } => {
+    let position = { x: 0, y: 0 };
+    let isOnSnake: boolean;
+
+    do {
+        isOnSnake = false;
+        position = {
+            x: Math.floor(Math.random() * BOARD_WIDTH),
+            y: Math.floor(Math.random() * BOARD_HEIGHT)
+        };
+        for (const player of room.players.values()) {
+            for (const segment of player.snake) {
+                if (segment.x === position.x && segment.y === position.y) {
+                    isOnSnake = true;
+                    break
+                }
+            }
+            if (isOnSnake) break;
+        }
+    } while (isOnSnake);
+
+    return position
 }
