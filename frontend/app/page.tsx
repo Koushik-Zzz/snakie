@@ -3,8 +3,33 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useGameStore } from "@/store/gameStore"
+import { useState } from "react"
+import GameScreen from "@/components/GameScreen"
 
 export default function HomePage() {
+
+  const {
+    playerName,
+    setPlayerName,
+    roomId,
+    createRoom,
+    joinRoom,
+    error
+  } = useGameStore()
+
+  const [joinRoomId, setJoinRoomId] = useState("");
+
+  if (roomId) {
+    return <GameScreen />;
+  }
+
+  const handleJoin = () => {
+    if (joinRoomId) {
+      joinRoom(joinRoomId)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background pattern */}
@@ -26,7 +51,8 @@ export default function HomePage() {
             <Input
               type="text"
               placeholder="Enter Your Name"
-              value={""}
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
               className="text-center text-lg font-medium bg-input/50 border-border/50 focus:border-primary focus:ring-primary/50"
               maxLength={20}
               readOnly
@@ -36,6 +62,7 @@ export default function HomePage() {
           {/* Primary actions */}
           <div className="grid grid-cols-1 gap-3">
             <Button
+              onClick={createRoom}
               className="h-12 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground neon-glow transition-all duration-300"
             >
               Create Room
@@ -44,6 +71,7 @@ export default function HomePage() {
             <Button
               variant="secondary"
               className="h-12 text-lg font-semibold bg-secondary hover:bg-secondary/90 text-secondary-foreground neon-glow-secondary transition-all duration-300"
+              disabled
             >
               Join Random Game
             </Button>
@@ -64,19 +92,21 @@ export default function HomePage() {
             <Input
               type="text"
               placeholder="Enter Room ID"
-              value={""}
+              value={joinRoomId}
+              onChange={(e) => setJoinRoomId(e.target.value)}
               className="text-center font-mono bg-input/50 border-border/50 focus:border-secondary focus:ring-secondary/50"
               maxLength={6}
-              readOnly
             />
 
             <Button
+              onClick={handleJoin}
               variant="outline"
               className="w-full h-10 border-border/50 hover:border-primary hover:bg-primary/10 transition-all duration-300 bg-transparent"
             >
               Join Room
             </Button>
           </div>
+          {error && <p className="text-sm text-center text-destructive">{error}</p>}
         </CardContent>
       </Card>
     </div>

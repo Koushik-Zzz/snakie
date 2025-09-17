@@ -10,6 +10,7 @@ import type { WebSocket } from "ws";
 export const handleCreateRoom = ({ clientId, ws }: { clientId: string, ws: WebSocket }) => {
     try {
         const roomId = nanoid(6);
+        console.log(`Creating room with ID: ${roomId} for client: ${clientId}`);
         const playersState: PlayerState = {
             snake: [{ x: 10, y: 10 }],
             direction: 'right',

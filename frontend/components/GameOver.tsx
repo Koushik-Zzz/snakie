@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, Star, RotateCcw } from "lucide-react"
+import { Trophy, Star, } from "lucide-react"
 
 export default function GameOverModal() {
   return (
