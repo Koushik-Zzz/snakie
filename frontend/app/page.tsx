@@ -55,7 +55,6 @@ export default function HomePage() {
               onChange={(e) => setPlayerName(e.target.value)}
               className="text-center text-lg font-medium bg-input/50 border-border/50 focus:border-primary focus:ring-primary/50"
               maxLength={20}
-              readOnly
             />
           </div>
 

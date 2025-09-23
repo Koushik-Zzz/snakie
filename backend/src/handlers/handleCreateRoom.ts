@@ -2,6 +2,7 @@ import { nanoid } from "nanoid"
 import type { PlayerState, RoomState } from "../types";
 import { clients, rooms } from "..";
 import type { WebSocket } from "ws";
+import { Room } from "../Room";
 
 /**
  * @param clientId ID of the player creating the room
@@ -9,25 +10,21 @@ import type { WebSocket } from "ws";
  */
 export const handleCreateRoom = ({ clientId, ws }: { clientId: string, ws: WebSocket }) => {
     try {
-        const roomId = nanoid(6);
-        console.log(`Creating room with ID: ${roomId} for client: ${clientId}`);
+        const room = new Room();
+        console.log(`Creating room with ID: ${room.id} for client: ${clientId}`);
         const playersState: PlayerState = {
             snake: [{ x: 10, y: 10 }],
             direction: 'right',
             score: 0,
             ws: ws
         };
-    
-        const roomState: RoomState = {
-            players: new Map([[clientId, playersState]]),
-            food: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) },
-            status: 'waiting'
-        }
-        clients.set(ws, { clientId, roomId })
-        rooms.set(roomId, roomState);
+
+        room.addPlayer(clientId, playersState);
+        clients.set(ws, { clientId, roomId: room.id });
+        rooms.set(room.id, room);
         ws.send(JSON.stringify({
             type: "roomCreated",
-            payload: { roomId: roomId, playerId: clientId }
+            payload: { roomId: room.id, playerId: clientId }
         }));
 
     } catch (error) {

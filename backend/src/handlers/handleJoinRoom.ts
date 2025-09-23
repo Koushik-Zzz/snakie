@@ -2,6 +2,7 @@ import { clients, rooms } from "..";
 import { BOARD_HEIGHT, BOARD_WIDTH } from "../constants/constants";
 import type { PlayerState, RoomState } from "../types";
 import type { WebSocket } from "ws";
+import { broadcastGameState } from "./broadcastGameState";
 
 /**
  * 
@@ -10,38 +11,32 @@ import type { WebSocket } from "ws";
  * @param roomId ID of the room to join
  */
 export function handleJoinRoom({ clientId, ws, roomId }: { clientId: string, ws: WebSocket, roomId: string }) {
-    if (!rooms.has(roomId)) {
+    const room = rooms.get(roomId)
+    if (!room) {
         ws.send(JSON.stringify({
             type: "error",
             payload: { message: "Room not found" }
         }))
+        return;
     }
 
-    const room = rooms.get(roomId);
-    if (room.players.size >= 2) {
+    
+    if (room.state.players.size >= 2) {
         ws.send(JSON.stringify({
             type: "error",
             payload: { message: "Room was full"}
         }))
+        return;
     }
 
     const newPlayerState: PlayerState = {
-        snake: [generateStartPosition(room)],
-        direction: 'right',
+        snake: [generateStartPosition(room.state)],
+        direction: 'left',
         score: 0,
         ws: ws
     };
     clients.set(ws, { clientId, roomId });
-    room.players.set(clientId, newPlayerState)
-
-    const allPlayerIds = Array.from(room.players.keys())
-    for (const player of room.players.values()) {
-        player.ws.send(JSON.stringify({
-            type: "updatePlayers",
-            payload: { players: allPlayerIds }
-        }))
-    }
-
+    room.addPlayer(clientId, newPlayerState);
 }
 
 const generateStartPosition = (room: RoomState): { x: number; y: number } => {

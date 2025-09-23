@@ -44,7 +44,6 @@ export default function GameOverModal() {
                 value={""}
                 className="text-center text-lg font-medium bg-input/50 border-border/50 focus:border-primary focus:ring-primary/50"
                 maxLength={20}
-                readOnly
               />
             </div>
             <Button className="w-full h-12 text-lg font-semibold bg-secondary hover:bg-secondary/90 text-secondary-foreground neon-glow-secondary transition-all duration-300">
@@ -58,6 +57,7 @@ export default function GameOverModal() {
               Play Again
             </Button>
             <Button
+              onClick={() => { window.location.reload() }}
               variant="outline"
               className="h-10 border-border/50 hover:border-secondary hover:bg-secondary/10 transition-all duration-300 bg-transparent"
             >

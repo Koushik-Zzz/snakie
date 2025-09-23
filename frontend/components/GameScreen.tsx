@@ -130,12 +130,12 @@ export default function GameScreen() {
           height={BOARD_HEIGHT}
           className="border-2 border-primary/50 rounded-lg neon-glow bg-gray-900"
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+        {/* <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
           <div className="text-center">
             <h3 className="text-2xl font-bold text-primary mb-2">Game Paused</h3>
             <p className="text-muted-foreground">Use arrow keys to play</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Instructions */}

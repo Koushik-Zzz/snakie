@@ -10,6 +10,7 @@ interface GameState {
     players: Player[];
     food: { x: number; y: number } | null;
     status: 'waiting' | 'playing' | 'ended';
+    winner?: string | null;
 }
 
 interface StoreState {
@@ -89,6 +90,7 @@ export const useGameStore = create<StoreState>((set, get) => ({
   joinRoom: (roomId) => {
     const ws = get().websocket;
     if (ws?.readyState === WebSocket.OPEN) {
+        set({ roomId: roomId, error: null })
         ws.send(JSON.stringify({ type: 'joinRoom', payload: { roomId } }));
     }
   },

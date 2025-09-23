@@ -1,18 +1,18 @@
-import express, { raw } from "express";
+import express from "express";
 import { createServer } from "http"
 import { nanoid } from "nanoid";
 import { WebSocketServer } from "ws";
 import { handleCreateRoom } from "./handlers/handleCreateRoom";
 import { handleJoinRoom } from "./handlers/handleJoinRoom";
-import { changeDirection } from "./handlers/changeDirection";
-import { handleGameLoop } from "./handlers/GameLoop";
-import { changeDirectionSchema, messageSchema } from "./types/validation";
+import { messageSchema } from "./types/validation";
+import { Room } from "./Room";
+
 const PORT = 8080;
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server })
 
-export const rooms = new Map() // this room array will hold all the rooms state
+export const rooms = new Map<string, Room>();  // this room array will hold all the rooms state
 export const clients = new Map(); 
 
 
@@ -55,11 +55,8 @@ wss.on("connection", (ws) => {
                 break;
             case "changeDirection":
                 if (clientData.roomId) {
-                    changeDirection({ 
-                        clientId: clientData.clientId, 
-                        roomId: clientData.roomId, 
-                        direction: messages.payload.direction 
-                    })
+                    const room = rooms.get(clientData.roomId)
+                    room?.changePlayerDirection(clientData.clientId, messages.payload.direction)
                 }
                 break;
 
@@ -81,19 +78,11 @@ wss.on("connection", (ws) => {
         if (roomId) {
             const room = rooms.get(roomId);
             if (room) {
-                room.players.delete(clientId)
+                room.removePlayer(clientId)
 
-                if (room.players.size === 0) {
-                    rooms.delete(roomId);
-                    console.log(`Room ${roomId} is empty and has been deleted.`);
-                } else {
-                    const remainingPlayerIds = Array.from(room.players.keys());
-                    for (const player of room.players.values()) {
-                        player.ws.send(JSON.stringify({
-                            type: "updatePlayers",
-                            payload: { players: remainingPlayerIds }
-                        }))
-                    }
+                if (room.state.players.size === 0) {
+                    rooms.delete(roomId)
+                    console.log(`Room ${roomId} is empty and has been deleted.`)
                 }
             }
         }
@@ -108,5 +97,3 @@ wss.on("connection", (ws) => {
 server.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
-
-handleGameLoop();
