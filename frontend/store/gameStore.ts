@@ -102,6 +102,13 @@ export const useGameStore = create<StoreState>((set, get) => ({
     }
   },
 
+  rematch: () => {
+    const ws = get().websocket;
+    if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'requestRematch'}))
+    }
+  },
+
   disconnect: () => {
     const ws = get().websocket;
     if (ws) {

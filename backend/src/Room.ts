@@ -13,10 +13,10 @@ export class Room {
         this.id = nanoid(6);
         this.state = {
             players: new Map(),
-            food: this.generateNewFood(),
+            food: { x: 0, y: 0 },
             status: 'waiting',
         }
-
+        this.state.food = this.generateNewFood()
     }
 
     addPlayer(clientId: string, playerState: PlayerState) {
@@ -33,6 +33,8 @@ export class Room {
         if (this.state.players.size < 2 && this.state.status === 'playing') {
             const winnerId = this.state.players.keys().next().value || null;
             this.endGame(winnerId)
+        } else {
+            broadcastGameState(this.state)
         }
     }
 
@@ -57,6 +59,7 @@ export class Room {
             clearInterval(this.gameLoopId);
         }
         this.gameLoopId = setInterval(() => this.gameLoop(), 150);
+        broadcastGameState(this.state);
     }
 
     endGame(winnerId: string | null) {

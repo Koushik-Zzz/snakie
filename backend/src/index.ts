@@ -1,7 +1,7 @@
 import express from "express";
 import { createServer } from "http"
 import { nanoid } from "nanoid";
-import { WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 import { handleCreateRoom } from "./handlers/handleCreateRoom";
 import { handleJoinRoom } from "./handlers/handleJoinRoom";
 import { messageSchema } from "./types/validation";
@@ -13,7 +13,7 @@ const server = createServer(app);
 const wss = new WebSocketServer({ server })
 
 export const rooms = new Map<string, Room>();  // this room array will hold all the rooms state
-export const clients = new Map(); 
+export const clients = new Map<WebSocket, { clientId: string, roomId: string | null }>(); 
 
 
 wss.on("connection", (ws) => {
