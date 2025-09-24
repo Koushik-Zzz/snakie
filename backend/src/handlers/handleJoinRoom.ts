@@ -2,7 +2,8 @@ import { clients, rooms } from "..";
 import { BOARD_HEIGHT, BOARD_WIDTH } from "../constants/constants";
 import type { PlayerState, RoomState } from "../types";
 import type { WebSocket } from "ws";
-import { broadcastGameState } from "./broadcastGameState";
+
+const joiningRooms = new Set<string>();
 
 /**
  * 
@@ -11,32 +12,46 @@ import { broadcastGameState } from "./broadcastGameState";
  * @param roomId ID of the room to join
  */
 export function handleJoinRoom({ clientId, ws, roomId }: { clientId: string, ws: WebSocket, roomId: string }) {
-    const room = rooms.get(roomId)
-    if (!room) {
+    if (joiningRooms.has(roomId)) {
         ws.send(JSON.stringify({
             type: "error",
-            payload: { message: "Room not found" }
+            payload: { message: "Room is currently being joined, please try again." }
         }))
         return;
     }
 
+    joiningRooms.add(roomId);
+
+    try {
+        const room = rooms.get(roomId)
+        if (!room) {
+            ws.send(JSON.stringify({
+                type: "error",
+                payload: { message: "Room not found" }
+            }))
+            return;
+        }
     
-    if (room.state.players.size >= 2) {
-        ws.send(JSON.stringify({
-            type: "error",
-            payload: { message: "Room was full"}
-        }))
-        return;
-    }
-
-    const newPlayerState: PlayerState = {
-        snake: [generateStartPosition(room.state)],
-        direction: 'left',
-        score: 0,
-        ws: ws
-    };
-    clients.set(ws, { clientId, roomId });
-    room.addPlayer(clientId, newPlayerState);
+        
+        if (room.state.players.size >= 2) {
+            ws.send(JSON.stringify({
+                type: "error",
+                payload: { message: "Room was full"}
+            }))
+            return;
+        }
+    
+        const newPlayerState: PlayerState = {
+            snake: [generateStartPosition(room.state)],
+            direction: 'left',
+            score: 0,
+            ws: ws
+        };
+        clients.set(ws, { clientId, roomId });
+        room.addPlayer(clientId, newPlayerState);
+  } finally {
+    joiningRooms.delete(roomId);
+  }
 }
 
 const generateStartPosition = (room: RoomState): { x: number; y: number } => {
