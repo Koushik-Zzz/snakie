@@ -38,12 +38,20 @@ export class Room {
         }
     }
 
-    changePlayerDirection(clientId: string, newDirection: 'up' | 'down' | 'left' | 'right') {
+    changePlayerDirection(
+        clientId: string,
+        newDirection: 'up' | 'down' | 'left' | 'right'
+    ) {
         const player = this.state.players.get(clientId)
         if (!player) return;
 
         const isOppositeDirection = (current: string, newDir: string) => {
-            const opposites = { 'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left' };
+            const opposites = { 
+                up: 'down', 
+                down: 'up', 
+                left: 'right', 
+                right: 'left' 
+            };
             return opposites[current as keyof typeof opposites] === newDir
         }
 
@@ -71,25 +79,72 @@ export class Room {
         broadcastGameState(this.state, winnerId);
     }
 
+    reset() {
+        let i = 0;
+        for (const player of this.state.players.values()) {
+            player.snake = [i === 0 ? { x: 10, y:10 } : { x: 30, y:30 }]
+            player.score = 0;
+            player.direction = 'right';
+            i++;
+        }
+
+        this.state.food = this.generateNewFood()
+
+        this.startGame()
+    }
+
     private gameLoop() {
         if (this.state.status !== 'playing') return;
+
+        const previousHeads = new Map<string, { x: number, y: number }>();
+        for (const [playerId, player] of this.state.players.entries()) {
+            if (player.snake[0]) {
+                previousHeads.set(playerId, { ...player.snake[0] });
+            }
+        }
 
         for (const player of this.state.players.values()) {
             this.moveSnakeHead(player);
         }
 
-        for (const [playerId, player] of this.state.players.entries()) {
-            const hasCollision =
-                this.checkWallCollision(player) ||
-                this.checkSelfCollision(player) ||
-                this.checkPlayerCollisionWithOthers(player);
+        let collidedPlayers = new Set<string>();
+        const playerIds = Array.from(this.state.players.keys());
 
-            if (hasCollision) {
-                const winnerId = Array.from(this.state.players.keys()).find(id => id !== playerId) || null;
-                 
-                this.endGame(winnerId);
-                return;
+        if (playerIds.length === 2) {
+            const player1 = this.state.players.get(playerIds[0]!);
+            const player2 = this.state.players.get(playerIds[1]!);
+            if (
+                player1?.snake[0]?.x === player2?.snake[0]?.x &&
+                player1?.snake[0]?.y === player2?.snake[0]?.y
+            ) {
+                collidedPlayers.add(playerIds[0]!);
+                collidedPlayers.add(playerIds[1]!);
             }
+        }
+
+        for (const [playerId, player] of this.state.players.entries()) {
+            if (this.checkCollision(player, previousHeads)) {
+                collidedPlayers.add(playerId);
+            }
+        }
+
+        if (collidedPlayers.size > 0) {
+            let winnerId: string | null = null;
+            
+            if (this.state.players.size - collidedPlayers.size === 1) {
+                winnerId = playerIds.find(id => !collidedPlayers.has(id)) || null;
+            } 
+            
+            else if (collidedPlayers.size === this.state.players.size) {
+                const players = Array.from(this.state.players.values())
+
+                if (players.length > 1 && players[0]?.score !== players[1]?.score) {
+                    winnerId = players.sort((a, b) => b.score - a.score)[0]?.ws.clientId;
+                }
+            }
+
+            this.endGame(winnerId);
+            return;
         }
 
         let foodEaten = false;
@@ -176,15 +231,23 @@ export class Room {
         return head.x === this.state.food.x && head.y === this.state.food.y;
     }
 
-    private checkPlayerCollisionWithOthers = (player: PlayerState): boolean => {
-        const head1 = player.snake[0];
+    private checkCollision(player: PlayerState, oldHeads: Map<string, { x: number; y: number }>): boolean {
+        return (
+            this.checkWallCollision(player) ||
+            this.checkSelfCollision(player) ||
+            this.checkPlayerCollisionWithOthers(player, oldHeads)
+        );
+    }
+
+    private checkPlayerCollisionWithOthers = (player: PlayerState, oldHeads: Map<string, { x: number, y: number }>): boolean => {
+        const head = player.snake[0];
+        if (!head) return false;
+
         for (const otherPlayer of this.state.players.values()) {
             if (otherPlayer === player) continue;
-            
-            for (const segment of otherPlayer.snake) {
-                if (segment.x === head1?.x && segment.y === head1?.y) {
-                    return true;
-                }
+
+            if (otherPlayer.snake.some(segment => segment.x == head.x && segment.y === head.y)) {
+                return true;
             }
         }
         return false;

@@ -20,4 +20,7 @@ export const messageSchema = z.discriminatedUnion('type', [
         type: z.literal('changeDirection'),
         payload: changeDirectionSchema
     }),
+    z.object({
+        type: z.literal('requestRematch')
+    })
 ])

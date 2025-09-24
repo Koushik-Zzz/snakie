@@ -59,7 +59,12 @@ wss.on("connection", (ws) => {
                     room?.changePlayerDirection(clientData.clientId, messages.payload.direction)
                 }
                 break;
-
+            case "requestRematch":
+                if (clientData.roomId) {
+                    const room = rooms.get(clientData.roomId);
+                    room?.reset()
+                }
+                break;
             default:
                 console.error("Unknown message type:", (messages as any).type);
                 break;
